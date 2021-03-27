@@ -3,7 +3,7 @@
 ##################################################
 # GNU Radio Python Flow Graph
 # Title: Konzerv Rx Atan
-# Generated: Sat Mar 27 12:54:08 2021
+# Generated: Sat Mar 27 13:36:29 2021
 ##################################################
 
 if __name__ == '__main__':
@@ -16,28 +16,45 @@ if __name__ == '__main__':
         except:
             print "Warning: failed to XInitThreads()"
 
+from PyQt4 import Qt
 from gnuradio import audio
 from gnuradio import blocks
 from gnuradio import eng_notation
 from gnuradio import filter
 from gnuradio import gr
-from gnuradio import wxgui
+from gnuradio import qtgui
 from gnuradio.eng_option import eng_option
-from gnuradio.fft import window
 from gnuradio.filter import firdes
-from gnuradio.wxgui import forms
-from gnuradio.wxgui import waterfallsink2
-from grc_gnuradio import wxgui as grc_wxgui
+from gnuradio.qtgui import Range, RangeWidget
 from optparse import OptionParser
-import wx
+import sip
+import sys
 
 
-class konzerv_rx_atan(grc_wxgui.top_block_gui):
+class konzerv_rx_atan(gr.top_block, Qt.QWidget):
 
     def __init__(self):
-        grc_wxgui.top_block_gui.__init__(self, title="Konzerv Rx Atan")
-        _icon_path = "/usr/share/icons/hicolor/32x32/apps/gnuradio-grc.png"
-        self.SetIcon(wx.Icon(_icon_path, wx.BITMAP_TYPE_ANY))
+        gr.top_block.__init__(self, "Konzerv Rx Atan")
+        Qt.QWidget.__init__(self)
+        self.setWindowTitle("Konzerv Rx Atan")
+        try:
+            self.setWindowIcon(Qt.QIcon.fromTheme('gnuradio-grc'))
+        except:
+            pass
+        self.top_scroll_layout = Qt.QVBoxLayout()
+        self.setLayout(self.top_scroll_layout)
+        self.top_scroll = Qt.QScrollArea()
+        self.top_scroll.setFrameStyle(Qt.QFrame.NoFrame)
+        self.top_scroll_layout.addWidget(self.top_scroll)
+        self.top_scroll.setWidgetResizable(True)
+        self.top_widget = Qt.QWidget()
+        self.top_scroll.setWidget(self.top_widget)
+        self.top_layout = Qt.QVBoxLayout(self.top_widget)
+        self.top_grid_layout = Qt.QGridLayout()
+        self.top_layout.addLayout(self.top_grid_layout)
+
+        self.settings = Qt.QSettings("GNU Radio", "konzerv_rx_atan")
+        self.restoreGeometry(self.settings.value("geometry").toByteArray())
 
         ##################################################
         # Variables
@@ -49,57 +66,79 @@ class konzerv_rx_atan(grc_wxgui.top_block_gui):
         ##################################################
         # Blocks
         ##################################################
-        _center_freq_sizer = wx.BoxSizer(wx.VERTICAL)
-        self._center_freq_text_box = forms.text_box(
-        	parent=self.GetWin(),
-        	sizer=_center_freq_sizer,
-        	value=self.center_freq,
-        	callback=self.set_center_freq,
-        	label='center_freq',
-        	converter=forms.float_converter(),
-        	proportion=0,
+        self._center_freq_range = Range(-samp_rate/2, samp_rate/2, 1, 0, 200)
+        self._center_freq_win = RangeWidget(self._center_freq_range, self.set_center_freq, "center_freq", "counter_slider", float)
+        self.top_layout.addWidget(self._center_freq_win)
+        self.qtgui_waterfall_sink_x_1 = qtgui.waterfall_sink_f(
+        	1024, #size
+        	firdes.WIN_BLACKMAN_hARRIS, #wintype
+        	0, #fc
+        	samp_rate, #bw
+        	"Demod signal", #name
+                1 #number of inputs
         )
-        self._center_freq_slider = forms.slider(
-        	parent=self.GetWin(),
-        	sizer=_center_freq_sizer,
-        	value=self.center_freq,
-        	callback=self.set_center_freq,
-        	minimum=-samp_rate/2,
-        	maximum=samp_rate/2,
-        	num_steps=100,
-        	style=wx.SL_HORIZONTAL,
-        	cast=float,
-        	proportion=1,
+        self.qtgui_waterfall_sink_x_1.set_update_time(0.10)
+        self.qtgui_waterfall_sink_x_1.enable_grid(False)
+        
+        if not True:
+          self.qtgui_waterfall_sink_x_1.disable_legend()
+        
+        if "float" == "float" or "float" == "msg_float":
+          self.qtgui_waterfall_sink_x_1.set_plot_pos_half(not True)
+        
+        labels = ["", "", "", "", "",
+                  "", "", "", "", ""]
+        colors = [0, 0, 0, 0, 0,
+                  0, 0, 0, 0, 0]
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+                  1.0, 1.0, 1.0, 1.0, 1.0]
+        for i in xrange(1):
+            if len(labels[i]) == 0:
+                self.qtgui_waterfall_sink_x_1.set_line_label(i, "Data {0}".format(i))
+            else:
+                self.qtgui_waterfall_sink_x_1.set_line_label(i, labels[i])
+            self.qtgui_waterfall_sink_x_1.set_color_map(i, colors[i])
+            self.qtgui_waterfall_sink_x_1.set_line_alpha(i, alphas[i])
+        
+        self.qtgui_waterfall_sink_x_1.set_intensity_range(-140, 10)
+        
+        self._qtgui_waterfall_sink_x_1_win = sip.wrapinstance(self.qtgui_waterfall_sink_x_1.pyqwidget(), Qt.QWidget)
+        self.top_layout.addWidget(self._qtgui_waterfall_sink_x_1_win)
+        self.qtgui_waterfall_sink_x_0 = qtgui.waterfall_sink_c(
+        	1024, #size
+        	firdes.WIN_BLACKMAN_hARRIS, #wintype
+        	0, #fc
+        	samp_rate, #bw
+        	"Rx signal", #name
+                1 #number of inputs
         )
-        self.Add(_center_freq_sizer)
-        self.wxgui_waterfallsink2_1 = waterfallsink2.waterfall_sink_f(
-        	self.GetWin(),
-        	baseband_freq=0,
-        	dynamic_range=100,
-        	ref_level=0,
-        	ref_scale=2.0,
-        	sample_rate=samp_rate,
-        	fft_size=2048,
-        	fft_rate=15,
-        	average=False,
-        	avg_alpha=None,
-        	title="Demodulated signal",
-        )
-        self.Add(self.wxgui_waterfallsink2_1.win)
-        self.wxgui_waterfallsink2_0 = waterfallsink2.waterfall_sink_c(
-        	self.GetWin(),
-        	baseband_freq=0,
-        	dynamic_range=100,
-        	ref_level=0,
-        	ref_scale=2.0,
-        	sample_rate=samp_rate,
-        	fft_size=512,
-        	fft_rate=15,
-        	average=False,
-        	avg_alpha=None,
-        	title="Received signal",
-        )
-        self.Add(self.wxgui_waterfallsink2_0.win)
+        self.qtgui_waterfall_sink_x_0.set_update_time(0.10)
+        self.qtgui_waterfall_sink_x_0.enable_grid(False)
+        
+        if not True:
+          self.qtgui_waterfall_sink_x_0.disable_legend()
+        
+        if "complex" == "float" or "complex" == "msg_float":
+          self.qtgui_waterfall_sink_x_0.set_plot_pos_half(not True)
+        
+        labels = ["", "", "", "", "",
+                  "", "", "", "", ""]
+        colors = [0, 0, 0, 0, 0,
+                  0, 0, 0, 0, 0]
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+                  1.0, 1.0, 1.0, 1.0, 1.0]
+        for i in xrange(1):
+            if len(labels[i]) == 0:
+                self.qtgui_waterfall_sink_x_0.set_line_label(i, "Data {0}".format(i))
+            else:
+                self.qtgui_waterfall_sink_x_0.set_line_label(i, labels[i])
+            self.qtgui_waterfall_sink_x_0.set_color_map(i, colors[i])
+            self.qtgui_waterfall_sink_x_0.set_line_alpha(i, alphas[i])
+        
+        self.qtgui_waterfall_sink_x_0.set_intensity_range(-140, 10)
+        
+        self._qtgui_waterfall_sink_x_0_win = sip.wrapinstance(self.qtgui_waterfall_sink_x_0.pyqwidget(), Qt.QWidget)
+        self.top_layout.addWidget(self._qtgui_waterfall_sink_x_0_win)
         self.freq_xlating_fir_filter_xxx_0 = filter.freq_xlating_fir_filter_ccc(1, (firdes.low_pass(1.0, samp_rate, 1.5e5, 1e4)), center_freq, samp_rate)
         self.fir_filter_xxx_0 = filter.fir_filter_fff(samp_rate/audio_rate, (firdes.low_pass(1.0, samp_rate, audio_rate/2-1000, 1000)))
         self.fir_filter_xxx_0.declare_sample_delay(0)
@@ -125,39 +164,43 @@ class konzerv_rx_atan(grc_wxgui.top_block_gui):
         self.connect((self.blocks_complex_to_float_1, 0), (self.blocks_multiply_xx_0, 1))    
         self.connect((self.blocks_complex_to_float_1, 1), (self.blocks_multiply_xx_1, 1))    
         self.connect((self.blocks_complex_to_mag_squared_0, 0), (self.blocks_divide_xx_0, 1))    
+        self.connect((self.blocks_complex_to_mag_squared_0, 0), (self.qtgui_waterfall_sink_x_1, 0))    
         self.connect((self.blocks_delay_0, 0), (self.blocks_sub_xx_0, 1))    
         self.connect((self.blocks_divide_xx_0, 0), (self.fir_filter_xxx_0, 0))    
-        self.connect((self.blocks_divide_xx_0, 0), (self.wxgui_waterfallsink2_1, 0))    
         self.connect((self.blocks_file_source_0, 0), (self.blocks_throttle_0, 0))    
         self.connect((self.blocks_multiply_xx_0, 0), (self.blocks_add_xx_0, 0))    
         self.connect((self.blocks_multiply_xx_1, 0), (self.blocks_add_xx_0, 1))    
         self.connect((self.blocks_sub_xx_0, 0), (self.blocks_complex_to_float_1, 0))    
         self.connect((self.blocks_throttle_0, 0), (self.freq_xlating_fir_filter_xxx_0, 0))    
-        self.connect((self.blocks_throttle_0, 0), (self.wxgui_waterfallsink2_0, 0))    
+        self.connect((self.blocks_throttle_0, 0), (self.qtgui_waterfall_sink_x_0, 0))    
         self.connect((self.fir_filter_xxx_0, 0), (self.audio_sink_0, 0))    
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.blocks_complex_to_float_0, 0))    
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.blocks_complex_to_mag_squared_0, 0))    
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.blocks_delay_0, 0))    
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.blocks_sub_xx_0, 0))    
 
+    def closeEvent(self, event):
+        self.settings = Qt.QSettings("GNU Radio", "konzerv_rx_atan")
+        self.settings.setValue("geometry", self.saveGeometry())
+        event.accept()
+
+
     def get_samp_rate(self):
         return self.samp_rate
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-        self.blocks_throttle_0.set_sample_rate(self.samp_rate)
         self.fir_filter_xxx_0.set_taps((firdes.low_pass(1.0, self.samp_rate, self.audio_rate/2-1000, 1000)))
-        self.wxgui_waterfallsink2_1.set_sample_rate(self.samp_rate)
-        self.wxgui_waterfallsink2_0.set_sample_rate(self.samp_rate)
         self.freq_xlating_fir_filter_xxx_0.set_taps((firdes.low_pass(1.0, self.samp_rate, 1.5e5, 1e4)))
+        self.qtgui_waterfall_sink_x_1.set_frequency_range(0, self.samp_rate)
+        self.blocks_throttle_0.set_sample_rate(self.samp_rate)
+        self.qtgui_waterfall_sink_x_0.set_frequency_range(0, self.samp_rate)
 
     def get_center_freq(self):
         return self.center_freq
 
     def set_center_freq(self, center_freq):
         self.center_freq = center_freq
-        self._center_freq_slider.set_value(self.center_freq)
-        self._center_freq_text_box.set_value(self.center_freq)
         self.freq_xlating_fir_filter_xxx_0.set_center_freq(self.center_freq)
 
     def get_audio_rate(self):
@@ -170,9 +213,21 @@ class konzerv_rx_atan(grc_wxgui.top_block_gui):
 
 def main(top_block_cls=konzerv_rx_atan, options=None):
 
+    from distutils.version import StrictVersion
+    if StrictVersion(Qt.qVersion()) >= StrictVersion("4.5.0"):
+        style = gr.prefs().get_string('qtgui', 'style', 'raster')
+        Qt.QApplication.setGraphicsSystem(style)
+    qapp = Qt.QApplication(sys.argv)
+
     tb = top_block_cls()
-    tb.Start(True)
-    tb.Wait()
+    tb.start()
+    tb.show()
+
+    def quitting():
+        tb.stop()
+        tb.wait()
+    qapp.connect(qapp, Qt.SIGNAL("aboutToQuit()"), quitting)
+    qapp.exec_()
 
 
 if __name__ == '__main__':
